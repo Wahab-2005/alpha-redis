@@ -1,0 +1,18 @@
+# Binaires
+alpha-redis
+*.o
+*.out
+*.exe
+
+# Dossiers de build
+build/
+obj/
+
+# Fichiers système
+.DS_Store
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/
