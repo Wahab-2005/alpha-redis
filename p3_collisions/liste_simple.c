@@ -15,8 +15,8 @@
  * ───────────────────────────────────────────── */
 void db_set(HashTable *ht, const char *key, const char *value) {
 
-    /* 1. Calculer l'index du bucket */
-    unsigned int index = hash(key, ht->size);
+    /* 1. Calculer l'index du bucket (hash de P2 retourne deja un index valide) */
+    unsigned long index = hash(key, ht->size);
 
     /* 2. Parcourir la liste chainee de ce bucket */
     Entry *current = ht->buckets[index];
@@ -48,10 +48,9 @@ void db_set(HashTable *ht, const char *key, const char *value) {
     ht->buckets[index]       = new_entry;
     ht->count++;
 
-    /* 4. Verifier si redimensionnement necessaire (facteur de charge > 0.7) */
-    if ((float)ht->count / ht->size > 0.7) {
-        ht_resize(ht);
-    }
+    /* 4. P2 fournit ht_check_resize : elle verifie le facteur de charge
+     * et appelle ht_resize() elle-meme si besoin. */
+    ht_check_resize(ht);
 }
 
 /* ─────────────────────────────────────────────
@@ -60,7 +59,7 @@ void db_set(HashTable *ht, const char *key, const char *value) {
 char* db_get(HashTable *ht, const char *key) {
 
     /* 1. Calculer l'index du bucket */
-    unsigned int index = hash(key, ht->size);
+    unsigned long index = hash(key, ht->size);
 
     /* 2. Parcourir la liste chainee du bucket */
     Entry *current = ht->buckets[index];
@@ -86,7 +85,7 @@ char* db_get(HashTable *ht, const char *key) {
 void db_del(HashTable *ht, const char *key) {
 
     /* 1. Calculer l'index du bucket */
-    unsigned int index = hash(key, ht->size);
+    unsigned long index = hash(key, ht->size);
 
     Entry *current  = ht->buckets[index];
     Entry *previous = NULL;
@@ -124,7 +123,7 @@ void db_del(HashTable *ht, const char *key) {
  * ───────────────────────────────────────────── */
 void db_set_list(HashTable *ht, const char *key, void *list) {
 
-    unsigned int index = hash(key, ht->size);
+    unsigned long index = hash(key, ht->size);
 
     /* Verifier si la cle existe deja */
     Entry *current = ht->buckets[index];
@@ -155,9 +154,7 @@ void db_set_list(HashTable *ht, const char *key, void *list) {
     ht->buckets[index] = new_entry;
     ht->count++;
 
-    if ((float)ht->count / ht->size > 0.7) {
-        ht_resize(ht);
-    }
+    ht_check_resize(ht);
 }
 
 /* ─────────────────────────────────────────────
@@ -165,7 +162,7 @@ void db_set_list(HashTable *ht, const char *key, void *list) {
  * ───────────────────────────────────────────── */
 Entry* db_get_entry(HashTable *ht, const char *key) {
 
-    unsigned int index = hash(key, ht->size);
+    unsigned long index = hash(key, ht->size);
 
     Entry *current = ht->buckets[index];
     while (current != NULL) {
