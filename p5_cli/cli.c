@@ -122,27 +122,49 @@ static void handle_push(HashTable *ht, char *key, char *value, int push_left) {
     if (!key || !value || has_extra_args()) {
         print_usage_error(push_left ? "LPUSH key value" : "RPUSH key value");
         return;
+    }
+    int wrong_type = 0;
+    Entry *e = get_or_create_list_entry(ht, key, &wrong_type);
+    if (wrong_type) {
+        printf(WRONGTYPE_MSG);
+        return;
+    }
+    ListeDouble *list = (ListeDouble*) e->list_value;
     if (push_left) list_lpush(list, value);
+    else            list_rpush(list, value);
+    printf("OK (length: %d)\n", list->length);
 }
+
 static void handle_pop(HashTable *ht, char *key, int pop_left) {
     if (!key || has_extra_args()) {
         print_usage_error(pop_left ? "LPOP key" : "RPOP key");
         return;
-
     }
     Entry *e = find_entry(ht, key);
     if (!e) {
+        printf("(nil)\n");
+        return;
+    }
     if (e->type != TYPE_LIST) {
         printf(WRONGTYPE_MSG);
+        return;
     }
+    ListeDouble *list = (ListeDouble*) e->list_value;
+    char *val = pop_left ? list_lpop(list) : list_rpop(list);
     if (!val) {
         printf("(nil)\n");
     } else {
+        printf("%s\n", val);
+        free(val); /* list_lpop/list_rpop transferent la propriete de la valeur a l'appelant */
+    }
 }
 
+/* ============================================================
  * REPL
  * ============================================================ */
 
+void run_cli(HashTable *ht) {
+    printf("alpha-Redis -- tapez EXIT pour quitter\n");
     char line[1024];
 
     while (1) {
@@ -296,26 +318,3 @@ void run_benchmark(void) {
     printf("\nSi le temps moyen par operation reste stable quand N augmente,\n");
     printf("la complexite O(1) amortie est validee.\n");
 }
-    printf("alpha-Redis -- tapez EXIT pour quitter\n");
-void run_cli(HashTable *ht) {
-/* ============================================================
-        free(val); /* list_lpop/list_rpop transferent la propriete de la valeur a l'appelant */
-    }
-        printf("%s\n", val);
-    ListeDouble *list = (ListeDouble*) e->list_value;
-    char *val = pop_left ? list_lpop(list) : list_rpop(list);
-        return;
-        printf("(nil)\n");
-        return;
-    }
-    printf("OK (length: %d)\n", list->length);
-    else            list_rpush(list, value);
-    }
-    ListeDouble *list = (ListeDouble*) e->list_value;
-    int wrong_type = 0;
-        return;
-        printf(WRONGTYPE_MSG);
-    Entry *e = get_or_create_list_entry(ht, key, &wrong_type);
-    if (wrong_type) {
-    }
-
